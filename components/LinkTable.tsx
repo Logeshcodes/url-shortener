@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Button from './ui/Button';
 import CopyButton from './ui/CopyButton';
+import ConfirmDialog from './ui/ConfirmDialog';
 import { formatRelativeTime } from '@/lib/timeUtils';
 import type { Link } from '@/types';
 
@@ -13,34 +13,35 @@ interface LinkTableProps {
 }
 
 export default function LinkTable({ links, onDelete }: LinkTableProps) {
-  const router = useRouter();
   const [deletingCode, setDeletingCode] = useState<string | null>(null);
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const [deleteCode, setDeleteCode] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const handleDelete = async (code: string) => {
-    if (!confirm('Are you sure you want to delete this link?')) {
-      return;
-    }
 
-    setDeletingCode(code);
-
+  const handleDelete = async () => {
+    if (!deleteCode) return;
+  
+    setDeletingCode(deleteCode);
+  
     try {
-      const response = await fetch(`/api/links/${code}`, {
+      const response = await fetch(`/api/links/${deleteCode}`, {
         method: 'DELETE',
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to delete link');
       }
-
+  
       onDelete();
     } catch (error) {
       console.error('Error deleting link:', error);
       alert('Failed to delete link. Please try again.');
     } finally {
       setDeletingCode(null);
+      setConfirmOpen(false);
     }
   };
+  
 
   const truncateUrl = (url: string, maxLength: number = 40) => {
     if (url.length <= maxLength) return url;
@@ -58,6 +59,8 @@ export default function LinkTable({ links, onDelete }: LinkTableProps) {
   }
 
   return (
+    <>
+
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -111,7 +114,10 @@ export default function LinkTable({ links, onDelete }: LinkTableProps) {
                 <td className="px-4 py-4 whitespace-nowrap text-sm">
                   <Button
                     variant="danger"
-                    onClick={() => handleDelete(link.code)}
+                    onClick={() => {
+                      setDeleteCode(link.code);
+                      setConfirmOpen(true);
+                    }}
                     isLoading={deletingCode === link.code}
                     className="!py-1 !px-2 !text-xs"
                   >
@@ -124,6 +130,16 @@ export default function LinkTable({ links, onDelete }: LinkTableProps) {
         </table>
       </div>
     </div>
+
+   <ConfirmDialog
+      open={confirmOpen}
+      message={`Do you really want to delete "${deleteCode}"?`}
+      onConfirm={handleDelete}
+      onCancel={() => setConfirmOpen(false)}
+    />
+
+    
+    </>
   );
 }
 
