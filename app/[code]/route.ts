@@ -7,15 +7,16 @@ export async function GET(
 ) {
   try {
     const { code } = params;
+    const codeLower = code.toLowerCase();
 
-    // Update clicks and get URL atomically
+    // Update clicks and get URL atomically (case-insensitive)
     const result = await pool.query(
       `UPDATE links 
        SET clicks = clicks + 1, 
            last_clicked_at = CURRENT_TIMESTAMP 
-       WHERE code = $1 
+       WHERE LOWER(code) = $1 
        RETURNING url`,
-      [code]
+      [codeLower]
     );
 
     if (result.rows.length === 0) {

@@ -45,7 +45,7 @@ export default function StatsPage() {
   }, [code]);
 
   const handleDelete = () => {
-    router.push('/');
+    router.push('/dashboard');
   };
 
   if (loading) {
@@ -67,7 +67,7 @@ export default function StatsPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">404</h1>
           <p className="text-red-600 mb-4">{error || 'Link not found'}</p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/dashboard')}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             Back to Dashboard

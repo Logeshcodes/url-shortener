@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import { Plus, Link2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Input from './ui/Input';
 import Button from './ui/Button';
 import { isValidUrl, isValidCode } from '@/lib/validation';
@@ -16,15 +18,11 @@ export default function LinkForm({ onSuccess }: LinkFormProps) {
   const [urlError, setUrlError] = useState('');
   const [codeError, setCodeError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [createdLink, setCreatedLink] = useState<CreateLinkResponse | null>(null);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setUrlError('');
     setCodeError('');
-    setSuccessMessage('');
-    setCreatedLink(null);
 
     // Validate URL
     if (!url.trim()) {
@@ -53,7 +51,7 @@ export default function LinkForm({ onSuccess }: LinkFormProps) {
         },
         body: JSON.stringify({
           url: url.trim(),
-          customCode: customCode.trim() || undefined,
+          customCode: customCode.trim().toLowerCase() || undefined,
         }),
       });
 
@@ -62,82 +60,80 @@ export default function LinkForm({ onSuccess }: LinkFormProps) {
       if (!response.ok) {
         if (response.status === 409) {
           setCodeError(data.error || 'This code already exists');
+          toast.error(data.error || 'This code already exists');
         } else if (response.status === 400) {
           if (data.error.includes('URL')) {
             setUrlError(data.error);
+            toast.error(data.error);
           } else {
             setCodeError(data.error);
+            toast.error(data.error);
           }
         } else {
           setUrlError('Failed to create link. Please try again.');
+          toast.error('Failed to create link. Please try again.');
         }
         return;
       }
 
       // Success
       const linkData: CreateLinkResponse = data;
-      setCreatedLink(linkData);
-      setSuccessMessage('Link created successfully!');
+      toast.success('Link created successfully!');
       setUrl('');
       setCustomCode('');
       
       // Refresh the links list
       onSuccess();
-
-      // Clear success message after 5 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-        setCreatedLink(null);
-      }, 5000);
     } catch (error) {
       console.error('Error creating link:', error);
       setUrlError('Failed to create link. Please try again.');
+      toast.error('Failed to create link. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-      <h2 className="text-2xl font-bold mb-4">Add New Short Link</h2>
-      
-      {successMessage && createdLink && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
-          <p className="text-green-800 font-medium">✓ {successMessage}</p>
-          <p className="text-sm text-green-700 mt-1">
-            Short URL: <a href={createdLink.shortUrl} className="underline" target="_blank" rel="noopener noreferrer">{createdLink.shortUrl}</a>
-          </p>
+    <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 md:p-8 mb-8 border border-white/20 hover:shadow-xl transition-shadow duration-300">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+          <Plus className="w-5 h-5 text-white" />
         </div>
-      )}
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Add New Short Link</h2>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Long URL"
-          type="url"
-          value={url}
-          onChange={(e) => {
-            setUrl(e.target.value);
-            setUrlError('');
-          }}
-          placeholder="https://example.com/very/long/url/path"
-          required
-          error={urlError}
-          disabled={isLoading}
-        />
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <Input
+            label="Long URL"
+            type="url"
+            value={url}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setUrlError('');
+            }}
+            placeholder="https://example.com/very/long/url/path"
+            required
+            error={urlError}
+            disabled={isLoading}
+          />
+        </div>
 
-        <Input
-          label="Custom Code"
-          type="text"
-          value={customCode}
-          onChange={(e) => {
-            setCustomCode(e.target.value);
-            setCodeError('');
-          }}
-          placeholder="Optional, 6-8 characters"
-          error={codeError}
-          disabled={isLoading}
-          maxLength={8}
-        />
+        <div>
+          <Input
+            label="Custom Code (Optional)"
+            type="text"
+            value={customCode}
+            onChange={(e) => {
+              setCustomCode(e.target.value);
+              setCodeError('');
+            }}
+            placeholder="6-8 alphanumeric characters"
+            error={codeError}
+            disabled={isLoading}
+            maxLength={8}
+          />
+        </div>
 
         <Button
           type="submit"
@@ -145,6 +141,7 @@ export default function LinkForm({ onSuccess }: LinkFormProps) {
           disabled={isLoading}
           className="w-full sm:w-auto"
         >
+          <Link2 className="w-4 h-4" />
           {isLoading ? 'Creating...' : 'Create Short Link'}
         </Button>
       </form>

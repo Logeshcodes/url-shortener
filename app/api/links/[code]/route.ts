@@ -8,10 +8,11 @@ export async function GET(
 ) {
   try {
     const { code } = params;
+    const codeLower = code.toLowerCase();
 
     const result = await pool.query(
-      'SELECT code, url, clicks, created_at, last_clicked_at FROM links WHERE code = $1',
-      [code]
+      'SELECT code, url, clicks, created_at, last_clicked_at FROM links WHERE LOWER(code) = $1',
+      [codeLower]
     );
 
     if (result.rows.length === 0) {
@@ -46,10 +47,11 @@ export async function DELETE(
 ) {
   try {
     const { code } = params;
+    const codeLower = code.toLowerCase();
 
     const result = await pool.query(
-      'DELETE FROM links WHERE code = $1 RETURNING code',
-      [code]
+      'DELETE FROM links WHERE LOWER(code) = $1 RETURNING code',
+      [codeLower]
     );
 
     if (result.rows.length === 0) {

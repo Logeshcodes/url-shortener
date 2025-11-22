@@ -9,6 +9,6 @@ CREATE TABLE IF NOT EXISTS links (
 );
 
 -- Indexes for performance
-CREATE UNIQUE INDEX IF NOT EXISTS idx_links_code ON links(code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_links_code_lower ON links (LOWER(code));
 CREATE INDEX IF NOT EXISTS idx_links_created_at ON links(created_at DESC);
 

@@ -27,14 +27,16 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+      // Convert to lowercase for case-insensitive comparison
+      code = code.toLowerCase();
     } else {
-      // Generate random code
-      code = generateShortCode();
+      // Generate random code (already lowercase)
+      code = generateShortCode().toLowerCase();
     }
 
-    // Check if code exists
+    // Check if code exists (case-insensitive)
     const existing = await pool.query(
-      'SELECT code FROM links WHERE code = $1',
+      'SELECT code FROM links WHERE LOWER(code) = LOWER($1)',
       [code]
     );
 
